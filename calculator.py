@@ -3,7 +3,7 @@ from parameterized import parameterized
 
 
 #this is a comment
-class Calculator:
+class Calculator_new:
     def multiply(self, a, b):
         return a * b
 
@@ -21,7 +21,7 @@ class Calculator:
 
 class TestCalculator(unittest.TestCase):
     def setUp(self):
-        self.calc = Calculator()
+        self.calc = Calculator_new()
 
     @parameterized.expand([
         ("positive_numbers", 2, 3, 5),
