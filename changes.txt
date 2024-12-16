@@ -1,3 +1,9 @@
 This is some changes
+<<<<<<< HEAD
 This is inside change
 Go come
+=======
+This is another change
+bhdsd
+Go test jhddsd jksak assa
+>>>>>>> conflict_branch
