@@ -1,69 +1,77 @@
+import ast
 import os
-import subprocess
-import re
 from collections import defaultdict
 
-def get_git_files():
-    """
-    Get a list of all Python files in the current Git repository.
-    """
-    try:
-        # Run git command to list all modified files
-        result = subprocess.run(['git', 'ls-files', '--modified', '*.py'], stdout=subprocess.PIPE, text=True)
-        return result.stdout.splitlines()
-    except subprocess.CalledProcessError as e:
-        print(f"Error running git command: {e}")
-        return []
 
-def count_functions_and_classes(file_path):
+def analyze_file(file_path):
     """
-    Count the number of functions and classes in a Python file.
+    Analyze a Python file to count the number of functions, classes,
+    and modules.
     """
-    try:
-        with open(file_path, 'r') as file:
-            content = file.read()
-            functions = len(re.findall(r'def\s+\w+\s*\(', content))
-            classes = len(re.findall(r'class\s+\w+\s*\(', content))
-            return functions, classes
-    except FileNotFoundError as e:
-        print(f"Error opening file: {e}")
-        return 0, 0
+    with open(file_path, "r", encoding="utf-8") as file:
+        try:
+            tree = ast.parse(file.read(), filename=file_path)
+        except SyntaxError as e:
+            print(f"Skipping {file_path} due to syntax error: {e}")
+            return 0, 0
 
-def count_modules(file_path):
-    """
-    Count the number of modules imported in a Python file.
-    """
-    try:
-        with open(file_path, 'r') as file:
-            content = file.read()
-            modules = len(re.findall(r'import\s+\w+', content)) + len(re.findall(r'from\s+\w+\s+import\s+\w+', content))
-            return modules
-    except FileNotFoundError as e:
-        print(f"Error opening file: {e}")
-        return 0
+    function_count = 0
+    class_count = 0
 
-def analyze_code_modularity(files):
-    """
-    Analyze the code modularity of the Git repository by counting functions, classes, and modules.
-    """
-    modularity_counts = defaultdict(int)
-    for file_path in files:
-        functions, classes = count_functions_and_classes(file_path)
-        modules = count_modules(file_path)
-        modularity_counts[file_path] = {'functions': functions, 'classes': classes, 'modules': modules}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef):
+            function_count += 1
+        elif isinstance(node, ast.ClassDef):
+            class_count += 1
 
-    print("Code Modularity Report:")
-    print("-----------------------")
-    for file_path, counts in modularity_counts.items():
+    return function_count, class_count
+
+
+def analyze_repository(repo_path):
+    """
+    Analyze all Python files in a repository to evaluate modularity.
+    """
+    modularity_summary = defaultdict(lambda: {"functions": 0, "classes": 0})
+
+    for root, _, files in os.walk(repo_path):
+        for file in files:
+            if file.endswith(".py"):
+                file_path = os.path.join(root, file)
+                functions, classes = analyze_file(file_path)
+                modularity_summary[file_path]["functions"] = functions
+                modularity_summary[file_path]["classes"] = classes
+
+    return modularity_summary
+
+
+def print_report(modularity_summary):
+    """
+    Print a modularity report for the repository.
+    """
+    print("Modularity Report:\n")
+    total_functions = 0
+    total_classes = 0
+
+    for file_path, counts in modularity_summary.items():
+        functions = counts["functions"]
+        classes = counts["classes"]
         print(f"File: {file_path}")
-        print(f"Functions: {counts['functions']}")
-        print(f"Classes: {counts['classes']}")
-        print(f"Modules: {counts['modules']}")
-        print()
+        print(f"  Functions: {functions}")
+        print(f"  Classes: {classes}\n")
+        total_functions += functions
+        total_classes += classes
 
-def main():
-    files = get_git_files()
-    analyze_code_modularity(files)
+    print("Overall Summary:\n")
+    print(f"Total Functions: {total_functions}")
+    print(f"Total Classes: {total_classes}")
+    print(f"Total Modules: {len(modularity_summary)}")
+
 
 if __name__ == "__main__":
-    main()
+    # Replace with the path to your Git repository
+    repo_path = '/path/to/your/git/repository'
+    if not os.path.exists(repo_path):
+        print("Invalid path. Please provide a valid Git repository path.")
+    else:
+        modularity_summary = analyze_repository(repo_path)
+        print_report(modularity_summary)
