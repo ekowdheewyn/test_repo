@@ -12,7 +12,7 @@ class Calculator_new:
 
     def divide(self, a, b):
         if b == 0:
-            raise ZeroDivisionError("jkhgfhjj Division by  ghhgjhh zero is not allowed")
+            raise ZeroDivisionError("jkhgfhjj Division by  ghhgjhh is not 8hjgkhjghb allowed hjyyghfjhgf")
         return a / b
 
     def is_equal(self, a, b):
