@@ -4,7 +4,7 @@ from parameterized import parameterized
 
 #this is a comment
 class Calculator_new:
-    def multiply(self, a, b):
+    def times(self, a, b):
         return a * b
 
     def add(self, a, b):
@@ -40,7 +40,7 @@ class TestCalculator(unittest.TestCase):
     ])
     def test_multiply(self, name, a, b, expected):
         self.assertEqual(
-            self.calc.multiply(a, b), expected, f"Failed on {name}"
+            self.calc.times(a, b), expected, f"Failed on {name}"
         )
 
     @parameterized.expand([
